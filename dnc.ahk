@@ -57,6 +57,10 @@ MAX_DEPTH := calculateMaxDepth(resolutionBottom)
 ; the depth we're at (0 = desktop, 1 = first sectors covered)
 depth := 0
 
+BackAll:=Object()
+BackOne:= [Floor(sectorWidth/2),Floor(sectorHeight/2),sectorTopX,sectorTopY,sectorWidth,sectorHeight]
+BackAll.Insert(BackOne)
+
 ; draw the initial grid
 if overlayEnabled {
 	GoSub, DrawGrid
@@ -85,7 +89,7 @@ Loop {
 	; get user input, but
 	; wait up to 5 seconds (T5) for 1 character (L1) of input and terminate if Escape, NumpadEnter or NumpadInsert occur
 	; (all numpad) Left, Right, Up, Down and diagonals are normal sector selectors
-	Input, userInput, T5 L1, {NumpadEnter}{Escape}, 0,1,2,3,4,5,6,7,8,9
+	Input, userInput, T5 L1, {NumpadEnter}{Escape}{Space}, 0,1,2,3,4,5,6,7,8,9, 
 
 	; we wait until the user decides to press any key
 	if ErrorLevel = Timeout
@@ -95,6 +99,7 @@ Loop {
 	if userInput = 0
 		; left click
 		Gosub,ClickLeft
+		
 
 	IfInString, ErrorLevel, EndKey:NumpadEnter
 		; right click
@@ -103,49 +108,62 @@ Loop {
 	IfInString, ErrorLevel, EndKey:Escape
 		; exit the script
 		Gosub,Quit
-	
-	; handle the valid keypresses
-	; default for the last sector is 0
-	lastSector := 0
-	; determine what sector was selected
-	if userInput in 1,2,3,4,5,6,7,8,9
-		lastSector := userInput
 
-	; update the new sector size (it's one third of what it was) ... easy ;)
-	sectorWidth := Floor(sectorWidth/3)
-	sectorHeight := Floor(sectorHeight/3)
-	
-	; update sector top left corner location
-	if userInput in 2,5,8
-		sectorTopX := sectorTopX + sectorWidth
-	if userInput in 3,6,9
-		sectorTopX := sectorTopX + (2*sectorWidth)
-
-	if userInput in 1,2,3
-		sectorTopY := sectorTopY + (2*sectorHeight)
-	if userInput in 4,5,6
-		sectorTopY := sectorTopY + sectorHeight
-	
-	; move the mouse to the new sector center
-	newX := sectorTopX + Floor(sectorWidth/2)
-	newY := sectorTopY + Floor(sectorHeight/2)
-
-	; if the user selected a sector, do the strange movements ;)
-	if (lastSector != 0) {
-		MouseMove, %newX%, %newY%
-		; if the overlay is enabled, draw the crosshairs
-		if overlayEnabled {
-			GoSub, DrawGrid
-		}
-
-		; increase the depth
-		depth := depth + 1
+	IfInString, ErrorLevel, EndKey:Space
+	{
+		Gosub, GoBack
 	}
-	
-	if ErrorLevel = Max { }
+	else
+	{
+		; handle the valid keypresses
+		; default for the last sector is 0
+		lastSector := 0
+		; determine what sector was selected
+		if userInput in 1,2,3,4,5,6,7,8,9
+			lastSector := userInput
 
-	if ErrorLevel = NewInput
-		return
+		; update the new sector size (it's one third of what it was) ... easy ;)
+		sectorWidth := Floor(sectorWidth/3)
+		sectorHeight := Floor(sectorHeight/3)
+		
+		; update sector top left corner location
+		if userInput in 2,5,8
+			sectorTopX := sectorTopX + sectorWidth
+		if userInput in 3,6,9
+			sectorTopX := sectorTopX + (2*sectorWidth)
+
+		if userInput in 1,2,3
+			sectorTopY := sectorTopY + (2*sectorHeight)
+		if userInput in 4,5,6
+			sectorTopY := sectorTopY + sectorHeight
+		
+		; move the mouse to the new sector center
+		newX := sectorTopX + Floor(sectorWidth/2)
+		newY := sectorTopY + Floor(sectorHeight/2)
+
+		
+		; if the user selected a sector, do the strange movements ;)
+		if (lastSector != 0) {
+			MouseMove, %newX%, %newY%
+			; if the overlay is enabled, draw the crosshairs
+			if overlayEnabled {
+				GoSub, DrawGrid
+				BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
+				BackAll.Insert(BackOne)
+			}
+
+			; increase the depth
+			depth := depth + 1
+		}
+		
+
+		
+		
+		if ErrorLevel = Max { }
+
+		if ErrorLevel = NewInput
+			return
+	}
 }
 return
 
@@ -160,6 +178,23 @@ calculateMaxDepth(screenSize) {
 		}
 	}
 }
+
+GoBack:
+	if(depth>0)
+	{
+		BackAll.remove(BackAll.MaxIndex())
+		depth--
+		BackOne := BackAll[BackAll.MaxIndex()]
+		newX:=		BackOne[1]
+		newY:=		BackOne[2]
+		sectorTopX:=	BackOne[3]
+		sectorTopY:=    BackOne[4]	
+		sectorWidth:=   BackOne[5]
+		sectorHeight:=  BackOne[6]
+		MouseMove, %newX%, %newY%
+		GoSub, DrawGrid
+	}
+return
 
 DrawGrid:
 	; draw the bounding box
@@ -179,6 +214,7 @@ DrawGrid:
 	; inner lines - vertical
 	drawRect(sectorTopX + Floor(sectorWidth/3), sectorTopY, 1, sectorHeight, 7)
 	drawRect(sectorTopX + Ceil(2 * (sectorWidth/3)), sectorTopY, 1, sectorHeight, 8)
+
 return
 
 drawRect(x, y, width, height, winNo) {
@@ -198,6 +234,8 @@ CleanUpGui:
 	Gui,6: Destroy
 	Gui,7: Destroy
 	Gui,8: Destroy
+	BackAll:=Object()
+
 return
 
 ; exit the current session
@@ -332,6 +370,7 @@ return
 ; used to close the about window
 GuiEscape:
 	Gui,Destroy
+
 return
 
 ; launches the AutoHotkey homepage in the default browser
