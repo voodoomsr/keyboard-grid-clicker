@@ -47,10 +47,33 @@ lastSector := 0
 
 ; sector top left corner, width and height
 ; we default to the whole screen as a sector
-sectorTopX := 0
+; Get the monitor resolution
+
+currentMonitor := GetMonitorMouse()
+SysGet, Monitor, Monitor, %currentMonitor%
+sectorTopX := MonitorLeft
 sectorTopY := 0
-sectorWidth := resolutionRight
-sectorHeight := resolutionBottom
+sectorWidth := (MonitorRight-MonitorLeft)
+sectorHeight := MonitorBottom
+
+
+GetMonitorMouse()
+{
+    MouseGetPos, x, y
+	
+	SysGet, MonitorCount, MonitorCount
+    
+	Loop, %MonitorCount%
+	{
+		SysGet, Monitor, Monitor, %A_Index%
+	
+		if(x >= MonitorLeft && x <= MonitorRight)
+		{	
+			return %A_Index%
+		}
+	}
+}
+
 
 ; compute max depth
 MAX_DEPTH := calculateMaxDepth(resolutionBottom)
@@ -58,10 +81,10 @@ MAX_DEPTH := calculateMaxDepth(resolutionBottom)
 depth := 0
 
 BackAll:=Object()
-BackOne:= [Floor(sectorWidth/2),Floor(sectorHeight/2),sectorTopX,sectorTopY,sectorWidth,sectorHeight]
+BackOne:= [ currentMouseX, currentMouseY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 BackAll.Insert(BackOne)
 
-; draw the initial grid
+;draw the initial grid
 if overlayEnabled {
 	GoSub, DrawGrid
 }
@@ -89,7 +112,7 @@ Loop {
 	; get user input, but
 	; wait up to 5 seconds (T5) for 1 character (L1) of input and terminate if Escape, NumpadEnter or NumpadInsert occur
 	; (all numpad) Left, Right, Up, Down and diagonals are normal sector selectors
-	Input, userInput, T5 L1, {NumpadEnter}{Escape}{Space}, 0,1,2,3,4,5,6,7,8,9, 
+	Input, userInput, T5 L1, {NumpadEnter}{Escape}{Space}, 0,1,2,3,4,5,6,7,8,9
 
 	; we wait until the user decides to press any key
 	if ErrorLevel = Timeout
