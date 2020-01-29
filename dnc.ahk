@@ -2,9 +2,10 @@
 ; AutoHotkey Version: 1.x
 ; Language:       English
 ; Platform:       Win9x/NT
-; Author:         Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
+; Author:         Michael Soza
 ; Based upon the 'Mouser' AutoHotkey script by Adam Pash <adam.pash@gmail.com>
-;
+; Based upon DNC from Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
+
 #SingleInstance,Force 
 SetWinDelay,0 
 
@@ -178,9 +179,6 @@ Loop {
 			; increase the depth
 			depth := depth + 1
 		}
-		
-
-		
 		
 		if ErrorLevel = Max { }
 
