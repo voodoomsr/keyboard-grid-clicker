@@ -7,6 +7,7 @@
 ; Based upon DNC from Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
 
 #SingleInstance,Force 
+#Include tryWindow\aboutWindow.ahk
 SetWinDelay,0 
 
 ; file name of the configuration file
@@ -87,7 +88,7 @@ BackAll.Insert(BackOne)
 
 ;draw the initial grid
 if overlayEnabled {
-	GoSub, DrawGrid
+	DrawGrid()
 }
 
 /*
@@ -102,7 +103,7 @@ Loop {
 	; all ends in the maximum depth
 	if (depth >= MAX_DEPTH) {
 		; destroy all gui windows
-		GoSub, CleanUpGui
+		CleanUpGui()
 		; end the main loop
 		break
 	}
@@ -135,7 +136,7 @@ Loop {
 
 	IfInString, ErrorLevel, EndKey:Space
 	{
-		Gosub, GoBack
+		GoBack()
 	}
 	else
 	{
@@ -171,7 +172,7 @@ Loop {
 			MouseMove, %newX%, %newY%
 			; if the overlay is enabled, draw the crosshairs
 			if overlayEnabled {
-				GoSub, DrawGrid
+				DrawGrid()
 				BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 				BackAll.Insert(BackOne)
 			}
@@ -200,7 +201,9 @@ calculateMaxDepth(screenSize) {
 	}
 }
 
-GoBack:
+GoBack()
+{
+	global
 	if(depth>0)
 	{
 		BackAll.remove(BackAll.MaxIndex())
@@ -213,12 +216,13 @@ GoBack:
 		sectorWidth:=   BackOne[5]
 		sectorHeight:=  BackOne[6]
 		MouseMove, %newX%, %newY%
-		GoSub, DrawGrid
+		DrawGrid()
 	}
-return
+}
 
-DrawGrid:
-	; draw the bounding box
+DrawGrid(){
+	global
+; draw the bounding box
 	; top line
 	drawRect(sectorTopX, sectorTopY, sectorWidth, 1, 1)
 	; right line
@@ -235,8 +239,7 @@ DrawGrid:
 	; inner lines - vertical
 	drawRect(sectorTopX + Floor(sectorWidth/3), sectorTopY, 1, sectorHeight, 7)
 	drawRect(sectorTopX + Ceil(2 * (sectorWidth/3)), sectorTopY, 1, sectorHeight, 8)
-
-return
+}
 
 drawRect(x, y, width, height, winNo) {
 	Gui, %winNo%: +AlwaysOnTop -Caption +LastFound +ToolWindow
@@ -246,7 +249,9 @@ drawRect(x, y, width, height, winNo) {
 }
 
 ; erases the 'crosshair'
-CleanUpGui:
+CleanUpGui()
+{
+	global
 	Gui,1: Destroy
 	Gui,2: Destroy
 	Gui,3: Destroy
@@ -256,14 +261,14 @@ CleanUpGui:
 	Gui,7: Destroy
 	Gui,8: Destroy
 	BackAll:=Object()
+}
 
-return
 
 ; exit the current session
 Quit:
 	if (overlayEnabled) {
 		; destroy all gui windows
-		GoSub, CleanUpGui
+		CleanUpGui()
 	}
 	exit
 return
@@ -271,7 +276,7 @@ return
 ClickLeft:
 	if (overlayEnabled) {
 		; destroy all gui windows
-		GoSub, CleanUpGui
+		CleanUpGui()
 	}
 	click
 	exit
@@ -280,7 +285,7 @@ return
 ClickRight:
 	if (overlayEnabled) {
 		; destroy all gui windows
-		GoSub, CleanUpGui
+		CleanUpGui()
 	}
 	Click right
 	exit
@@ -356,7 +361,7 @@ SETTINGSOK:
 	
 	if (!overlayEnabled) {
 		; destroy all gui windows
-		GoSub, CleanUpGui
+		CleanUpGui()
 	}
 return
 
@@ -367,26 +372,6 @@ SETTINGSCANCEL:
 	Gui,9: Destroy
 return
 
-
-ABOUT:
-	Gui,Destroy
-	Gui,Font,Bold,Lucida Console
-	Gui,Add,Text,,DnC (Divide and Conquer)
-	Gui,Font,Norm Italic
-	Gui,Add,Text,xm,mouse replacement utility
-	Gui,Font,Norm
-	Gui,Add,Text,xm yp+25,Press Ctrl+* to start. Escape to exit.
-	Gui,Add,Text,xm,Numbers (1-9) select the sector in the grid.
-	Gui,Add,Text,xm,Right click the tray icon to change settings.
-	Gui,Add,Text,xm yp+25,Created using
-	Gui,Font,underline
-	Gui,Add,Text,xp+97 yp cBlue gAutohotkeyHome,AutoHotkey
-	Gui,Font,norm
-	Gui,Add,Text,xm yp+25,Inspired by
-	Gui,Font,underline
-	Gui,Add,Text,xp+83 cBlue gMouserHome,'Mouser' by Adam Pash
-	Gui,Show,,About DnC
-return
 
 ; used to close the about window
 GuiEscape:
