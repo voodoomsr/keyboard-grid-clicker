@@ -17,10 +17,7 @@ overlayEnabled := overlayEnabled
 color := Ceil(color)
 transparency := transparency
 
-return
 
-Home::
-Gosub, START
 
 START:
 CoordMode, Mouse, Screen
@@ -78,7 +75,7 @@ Loop {
 	
 	MouseGetPos, currentMouseX, currentMouseY
 	
-	Input, userInput, T5 L1, {Escape}{Space}
+	Input, userInput, T5 L1, {Escape}{Space}, w,e,r,s,d,f,x,c,v
 
 	if ErrorLevel = Timeout
 		continue
