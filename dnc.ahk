@@ -67,8 +67,12 @@ bD.sectorWidth:= sectorWidth
 bD.sectorHeight:= sectorHeight
 
 DrawGrid(bD)
+currentBox := bD
 
 Loop {
+
+	
+
 	if (depth >= MAX_DEPTH) {
 		CleanUpGui()
 		break
@@ -99,45 +103,52 @@ Loop {
 	}
 	else
 	{
-
-		lastSector := 0
+		
 		if userInput in x,c,v,s,d,f,w,e,r
-			lastSector := userInput
+		{
+			currentBox:= computeNewBox(currentBox, userInput)
+			mousePosition:= moveMouseToCellCenter(currentBox)
 
-		sectorWidth := Floor(sectorWidth/3)
-		sectorHeight := Floor(sectorHeight/3)
-		
-		if userInput in c,d,e
-			sectorTopX := sectorTopX + sectorWidth
-		if userInput in v,f,r
-			sectorTopX := sectorTopX + (2*sectorWidth)
-
-		if userInput in x,c,v
-			sectorTopY := sectorTopY + (2*sectorHeight)
-		if userInput in s,d,f
-			sectorTopY := sectorTopY + sectorHeight
-		
-		
-		newX := sectorTopX + Floor(sectorWidth/2)
-		newY := sectorTopY + Floor(sectorHeight/2)
-	
-		if (lastSector != 0) {
-			MouseMove, %newX%, %newY%
-	
-			DrawGrid({ "sectorTopX" : sectorTopX, "sectorTopY": sectorTopY, "sectorWidth" : sectorWidth, "sectorHeight": sectorHeight })
-			BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
-			BackAll.Insert(BackOne)
-			
+			DrawGrid(currentBox)
+			BackOne:= [mousePosition.newX, mousePosition.newY, currentBox.sectorTopX, currentBox.sectorTopY, currentBox.sectorWidth, currentBox.sectorHeight]
+			BackAll.Insert(BackOne)			
 			depth := depth + 1
-		}
-		
-		if ErrorLevel = Max { }
+			
+			if ErrorLevel = Max { }
 
-		if ErrorLevel = NewInput
-			return
+			if ErrorLevel = NewInput
+				return
+		}
 	}
 }
 return
+
+moveMouseToCellCenter(currentBox)
+{
+	newX := currentBox.sectorTopX + Floor(currentBox.sectorWidth/2)
+	newY := currentBox.sectorTopY + Floor(currentBox.sectorHeight/2)
+	MouseMove, %newX%, %newY%
+	return [newX, newY]
+}
+
+computeNewBox(currentBox, selection)
+{
+	newBox := currentBox.Clone()
+	newBox.sectorWidth := Floor(newBox.sectorWidth/3)
+	newBox.sectorHeight := Floor(newBox.sectorHeight/3)
+
+	if selection in c,d,e
+		newBox.sectorTopX := newBox.sectorTopX + newBox.sectorWidth
+	if selection in v,f,r
+		newBox.sectorTopX := newBox.sectorTopX + (2*newBox.sectorWidth)
+
+	if selection in x,c,v
+		newBox.sectorTopY := newBox.sectorTopY + (2*newBox.sectorHeight)
+	if selection in s,d,f
+		newBox.sectorTopY := newBox.sectorTopY + newBox.sectorHeight
+
+	return newBox
+}
 
 calculateMaxDepth(screenSize) {
 	tmpHeight := screenSize
