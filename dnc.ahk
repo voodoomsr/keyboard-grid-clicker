@@ -13,7 +13,6 @@ SetWinDelay,0
 iniFile = dnc.ini
 LoadConfigurationFile()
 GenerateTrayMenu()
-overlayEnabled := overlayEnabled
 color := Ceil(color)
 transparency := transparency
 
@@ -61,11 +60,7 @@ BackAll:=Object()
 BackOne:= [ currentMouseX, currentMouseY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 BackAll.Insert(BackOne)
 
-
-if overlayEnabled {
-	DrawGrid()
-}
-
+DrawGrid()
 
 Loop {
 	if (depth >= MAX_DEPTH) {
@@ -123,12 +118,10 @@ Loop {
 		if (lastSector != 0) {
 			MouseMove, %newX%, %newY%
 	
-			if overlayEnabled {
-				DrawGrid()
-				BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
-				BackAll.Insert(BackOne)
-			}
-
+			DrawGrid()
+			BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
+			BackAll.Insert(BackOne)
+			
 			depth := depth + 1
 		}
 		
@@ -210,9 +203,7 @@ CleanUpGui()
 Quit()
 {
 	global
-	if (overlayEnabled) {
-		CleanUpGui()
-	}
+	CleanUpGui()
 	exit
 }
 	
@@ -220,9 +211,7 @@ Quit()
 ClickLeft()
 {
 	global
-	if (overlayEnabled) {
-		CleanUpGui()
-	}
+	CleanUpGui()
 	click
 	exit
 }
@@ -230,19 +219,15 @@ ClickLeft()
 ClickRight()
 {
 	global
-	if (overlayEnabled) {
-		CleanUpGui()
-	}
+	CleanUpGui()
 	Click right
 	exit
 }
 
 ClickDouble()
 {
-	global
-	if (overlayEnabled) {
-		CleanUpGui()
-	}
+	global	
+	CleanUpGui()
 	Click 2
 	exit
 }
@@ -253,12 +238,10 @@ LoadConfigurationFile()
 	IfNotExist,%iniFile%
 	{
 		IniWrite,^NumpadMult,%iniFile%,Settings,hotkey
-		IniWrite,1,%iniFile%,Settings,overlayEnabled
 		IniWrite,FF3333,%iniFile%,Settings,color
 		IniWrite,70,%iniFile%,Settings,transparency
 	}
 	IniRead,hotkey,%iniFile%,Settings,hotkey
-	IniRead,overlayEnabled,%iniFile%,Settings,overlayEnabled
 	IniRead,color,%iniFile%,Settings,color
 	IniRead,transparency,%iniFile%,Settings,transparency
 	HotKey,%hotkey%,START
@@ -287,7 +270,6 @@ SETTINGS:
 	StringReplace,current,current,^,Ctrl +%A_Space%
 	StringReplace,current,current,!,Alt +%A_Space%
 	Gui,9: Add, Text,,Current hotkey: %current%
-	Gui,9: Add, Checkbox, xp yp+32 vsvisualizations_cbox Checked%overlayEnabled%, Show targeting grid
 	Gui,9: Add, GroupBox, xm y+10 w400 h55,&Grid transparency (0 to 250; default:70; currently:%transparency%):
 	Gui,9: Add, Slider, xp+10 yp+20 w380 vstransparency Range0-250 ToolTipRight TickInterval25, %transparency%
 	Gui,9: Add, Button, xm y+30 w75 GSETTINGSOK,&OK
@@ -308,7 +290,6 @@ SETTINGSOK:
 	if svisualizations_cbox<>
 	  overlayEnabled := svisualizations_cbox
 	IniWrite,%hotkey%,%iniFile%,Settings,hotkey
-	IniWrite,%overlayEnabled%,%iniFile%,Settings,overlayEnabled
 	IniWrite,%transparency%,%iniFile%,Settings,transparency
 	IniWrite,%checkbox%, %iniFile%, Settings,checkbox
 	Gui,9: Destroy
