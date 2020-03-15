@@ -60,7 +60,13 @@ BackAll:=Object()
 BackOne:= [ currentMouseX, currentMouseY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 BackAll.Insert(BackOne)
 
-DrawGrid()
+bD:= {}
+bD.sectorTopX:= sectorTopX
+bD.sectorTopY:= sectorTopY
+bD.sectorWidth:= sectorWidth
+bD.sectorHeight:= sectorHeight
+
+DrawGrid(bD)
 
 Loop {
 	if (depth >= MAX_DEPTH) {
@@ -118,7 +124,7 @@ Loop {
 		if (lastSector != 0) {
 			MouseMove, %newX%, %newY%
 	
-			DrawGrid()
+			DrawGrid({ "sectorTopX" : sectorTopX, "sectorTopY": sectorTopY, "sectorWidth" : sectorWidth, "sectorHeight": sectorHeight })
 			BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 			BackAll.Insert(BackOne)
 			
@@ -160,22 +166,22 @@ GoBack()
 		sectorWidth:=   BackOne[5]
 		sectorHeight:=  BackOne[6]
 		MouseMove, %newX%, %newY%
-		DrawGrid()
+		DrawGrid({ "sectorTopX" : sectorTopX, "sectorTopY": sectorTopY, "sectorWidth" : sectorWidth, "sectorHeight": sectorHeight })
 	}
 }
 
-DrawGrid(){
-	global
-	drawRect(sectorTopX, sectorTopY, sectorWidth, 1, 1)
-	drawRect(sectorTopX + sectorWidth - 1, sectorTopY, 1, sectorHeight, 2)
-	drawRect(sectorTopX, sectorTopY + sectorHeight - 1, sectorWidth, 1, 3)
-	drawRect(sectorTopX, sectorTopY, 1, sectorHeight, 4)
+DrawGrid(boxDefinition){
+	bD := boxDefinition.Clone()
+	drawRect(bD.sectorTopX, bD.sectorTopY, bD.sectorWidth, 1, 1)
+	drawRect(bD.sectorTopX + bD.sectorWidth - 1, bD.sectorTopY, 1, bD.sectorHeight, 2)
+	drawRect(bD.sectorTopX, bD.sectorTopY + bD.sectorHeight - 1, bD.sectorWidth, 1, 3)
+	drawRect(bD.sectorTopX, bD.sectorTopY, 1, bD.sectorHeight, 4)
 
-	drawRect(sectorTopX, sectorTopY + Floor(sectorHeight/3), sectorWidth, 1, 5)
-	drawRect(sectorTopX, sectorTopY + Ceil(2 * (sectorHeight/3)), sectorWidth, 1, 6)
+	drawRect(bD.sectorTopX, bD.sectorTopY + Floor(bD.sectorHeight/3), bD.sectorWidth, 1, 5)
+	drawRect(bD.sectorTopX, bD.sectorTopY + Ceil(2 * (bD.sectorHeight/3)), bD.sectorWidth, 1, 6)
 	
-	drawRect(sectorTopX + Floor(sectorWidth/3), sectorTopY, 1, sectorHeight, 7)
-	drawRect(sectorTopX + Ceil(2 * (sectorWidth/3)), sectorTopY, 1, sectorHeight, 8)
+	drawRect(bD.sectorTopX + Floor(bD.sectorWidth/3), bD.sectorTopY, 1, bD.sectorHeight, 7)
+	drawRect(bD.sectorTopX + Ceil(2 * (bD.sectorWidth/3)), bD.sectorTopY, 1, bD.sectorHeight, 8)
 }
 
 drawRect(x, y, width, height, winNo) {
@@ -202,7 +208,6 @@ CleanUpGui()
 
 Quit()
 {
-	global
 	CleanUpGui()
 	exit
 }
@@ -210,7 +215,6 @@ Quit()
 
 ClickLeft()
 {
-	global
 	CleanUpGui()
 	click
 	exit
@@ -218,7 +222,6 @@ ClickLeft()
 
 ClickRight()
 {
-	global
 	CleanUpGui()
 	Click right
 	exit
@@ -226,7 +229,6 @@ ClickRight()
 
 ClickDouble()
 {
-	global	
 	CleanUpGui()
 	Click 2
 	exit
