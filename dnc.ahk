@@ -56,15 +56,16 @@ GetMonitorMouse()
 MAX_DEPTH := calculateMaxDepth(resolutionBottom)
 depth := 0
 
-BackAll:=Object()
-BackOne:= [ currentMouseX, currentMouseY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
-BackAll.Insert(BackOne)
-
 bD:= {}
 bD.sectorTopX:= sectorTopX
 bD.sectorTopY:= sectorTopY
 bD.sectorWidth:= sectorWidth
 bD.sectorHeight:= sectorHeight
+
+
+BackAll:=Object()
+BackOne:= [ [currentMouseX, currentMouseY], bD]
+BackAll.Insert(BackOne)
 
 DrawGrid(bD)
 currentBox := bD
@@ -88,7 +89,7 @@ Loop {
 	if userInput = j
 		ClickLeft()
 
-	if userInput = l
+	if userInput = l  
 		ClickRight()
 
 	if userInput = k
@@ -99,7 +100,14 @@ Loop {
 
 	IfInString, ErrorLevel, EndKey:Space
 	{
-		GoBack()
+		if(depth>0)
+		{
+			newCurrent:= GoBack(BackAll)
+			mousePosition:= newCurrent[1]
+			currentBox:= newCurrent[2]
+			depth:= depth - 1
+		}
+		
 	}
 	else
 	{
@@ -110,7 +118,7 @@ Loop {
 			mousePosition:= moveMouseToCellCenter(currentBox)
 
 			DrawGrid(currentBox)
-			BackOne:= [mousePosition.newX, mousePosition.newY, currentBox.sectorTopX, currentBox.sectorTopY, currentBox.sectorWidth, currentBox.sectorHeight]
+			BackOne:= [mousePosition, currentBox]
 			BackAll.Insert(BackOne)			
 			depth := depth + 1
 			
@@ -162,23 +170,16 @@ calculateMaxDepth(screenSize) {
 	}
 }
 
-GoBack()
+GoBack(history)
 {
-	global
-	if(depth>0)
-	{
-		BackAll.remove(BackAll.MaxIndex())
-		depth--
-		BackOne := BackAll[BackAll.MaxIndex()]
-		newX:=		BackOne[1]
-		newY:=		BackOne[2]
-		sectorTopX:=	BackOne[3]
-		sectorTopY:=    BackOne[4]	
-		sectorWidth:=   BackOne[5]
-		sectorHeight:=  BackOne[6]
-		MouseMove, %newX%, %newY%
-		DrawGrid({ "sectorTopX" : sectorTopX, "sectorTopY": sectorTopY, "sectorWidth" : sectorWidth, "sectorHeight": sectorHeight })
-	}
+	history.remove(history.MaxIndex())
+	BackOne := history[history.MaxIndex()]
+	newX:=		BackOne[1][1]
+	newY:=		BackOne[1][2]
+
+	MouseMove, %newX%, %newY%
+	DrawGrid(BackOne[2])
+	return BackOne
 }
 
 DrawGrid(boxDefinition){
