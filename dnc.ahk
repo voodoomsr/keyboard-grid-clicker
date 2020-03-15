@@ -99,6 +99,7 @@ if overlayEnabled {
 	3) move the mouse to the new position
 	4) draw the new grid
 */
+
 Loop {
 	; all ends in the maximum depth
 	if (depth >= MAX_DEPTH) {
@@ -123,16 +124,16 @@ Loop {
 	; handle keypresses, that terminate further execution (clicks and quit actions)
 	if userInput = 0
 		; left click
-		Gosub,ClickLeft
+		ClickLeft()
 		
 
 	IfInString, ErrorLevel, EndKey:NumpadEnter
 		; right click
-		Gosub,ClickRight
+		ClickRight()
 
 	IfInString, ErrorLevel, EndKey:Escape
 		; exit the script
-		Gosub,Quit
+		Quit()
 
 	IfInString, ErrorLevel, EndKey:Space
 	{
@@ -140,6 +141,8 @@ Loop {
 	}
 	else
 	{
+
+
 		; handle the valid keypresses
 		; default for the last sector is 0
 		lastSector := 0
@@ -265,31 +268,38 @@ CleanUpGui()
 
 
 ; exit the current session
-Quit:
+Quit()
+{
+	global
 	if (overlayEnabled) {
 		; destroy all gui windows
 		CleanUpGui()
 	}
 	exit
-return
+}
+	
 
-ClickLeft:
+ClickLeft()
+{
+	global
 	if (overlayEnabled) {
 		; destroy all gui windows
 		CleanUpGui()
 	}
 	click
 	exit
-return
+}
 
-ClickRight:
+ClickRight()
+{
+	global
 	if (overlayEnabled) {
 		; destroy all gui windows
 		CleanUpGui()
 	}
 	Click right
 	exit
-return
+}
 
 ; reads/initializes the configuration file
 INI:
