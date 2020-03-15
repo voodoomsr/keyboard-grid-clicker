@@ -7,16 +7,16 @@
 ; Based upon DNC from Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
 
 #SingleInstance,Force 
-#Include tryWindow\aboutWindow.ahk
+#Include trayWindow\aboutWindow.ahk
 SetWinDelay,0 
 
 ; file name of the configuration file
 iniFile = dnc.ini
 
 ; initialize the configuration file
-Gosub,INI
+LoadConfigurationFile()
 ; generate tray menu
-Gosub,TRAYMENU
+GenerateTrayMenu()
 
 ; why does he just reassign the variables? just to show what are there? strange ... 
 
@@ -125,7 +125,7 @@ Loop {
 	if userInput = 0
 		; left click
 		ClickLeft()
-		
+			
 
 	IfInString, ErrorLevel, EndKey:NumpadEnter
 		; right click
@@ -302,7 +302,9 @@ ClickRight()
 }
 
 ; reads/initializes the configuration file
-INI:
+LoadConfigurationFile()
+{
+	global
 	IfNotExist,%iniFile%
 	{
 		; write the defaults to the configuration file
@@ -317,10 +319,12 @@ INI:
 	IniRead,color,%iniFile%,Settings,color
 	IniRead,transparency,%iniFile%,Settings,transparency
 	HotKey,%hotkey%,START
-return
+}
 
 ; generate the tray menu
-TRAYMENU:
+GenerateTrayMenu()
+{
+	global
 	Menu,Tray,NoStandard 
 	Menu,Tray,DeleteAll 
 	Menu,Tray,Add,DnC,ABOUT
@@ -330,7 +334,8 @@ TRAYMENU:
 	Menu,Tray,Add,E&xit,EXIT
 	Menu,Tray,Default,DnC
 	Menu,Tray,Tip,Divide and Conquer
-return
+}
+
 
 ; opens the Settings window
 SETTINGS:
