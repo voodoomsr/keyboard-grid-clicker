@@ -10,46 +10,21 @@
 #Include trayWindow\aboutWindow.ahk
 SetWinDelay,0 
 
-; file name of the configuration file
 iniFile = dnc.ini
-
-; initialize the configuration file
 LoadConfigurationFile()
-; generate tray menu
 GenerateTrayMenu()
-
-; why does he just reassign the variables? just to show what are there? strange ... 
-
-; are the overlays enabled?
 overlayEnabled := overlayEnabled
-; ?? color of the overlays ??
 color := Ceil(color)
-; degree of transparency of the overlay
 transparency := transparency
 
-; CTRL + Enter shortcut clicks ???
-^+Enter::
-Click
 return
-
 START:
-; set the mouse mode to work with the whole screen
 CoordMode, Mouse, Screen
-; store the current mouse position
 MouseGetPos, currentMouseX, currentMouseY
 
-; get the monitor resolution
-; TODO - repair to work with a multi monitor setup ... by selecting the monitor in the first step?
 SysGet, resolution, Monitor
 
-; what to keep track of
-
-; last selected sector
 lastSector := 0	
-
-; sector top left corner, width and height
-; we default to the whole screen as a sector
-; Get the monitor resolution
 
 currentMonitor := GetMonitorMouse()
 SysGet, Monitor, Monitor, %currentMonitor%
@@ -77,62 +52,41 @@ GetMonitorMouse()
 }
 
 
-; compute max depth
+
 MAX_DEPTH := calculateMaxDepth(resolutionBottom)
-; the depth we're at (0 = desktop, 1 = first sectors covered)
 depth := 0
 
 BackAll:=Object()
 BackOne:= [ currentMouseX, currentMouseY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 BackAll.Insert(BackOne)
 
-;draw the initial grid
+
 if overlayEnabled {
 	DrawGrid()
 }
 
-/*
-	What to do in the main loop?
-	
-	1) get user input
-	2) determine what sectors is selected
-	3) move the mouse to the new position
-	4) draw the new grid
-*/
 
 Loop {
-	; all ends in the maximum depth
 	if (depth >= MAX_DEPTH) {
-		; destroy all gui windows
 		CleanUpGui()
-		; end the main loop
 		break
 	}
-
-	; get the mouse position
+	
 	MouseGetPos, currentMouseX, currentMouseY
-
-	; get user input, but
-	; wait up to 5 seconds (T5) for 1 character (L1) of input and terminate if Escape, NumpadEnter or NumpadInsert occur
-	; (all numpad) Left, Right, Up, Down and diagonals are normal sector selectors
+	
 	Input, userInput, T5 L1, {NumpadEnter}{Escape}{Space}, 0,1,2,3,4,5,6,7,8,9
 
-	; we wait until the user decides to press any key
 	if ErrorLevel = Timeout
 		continue
 	
-	; handle keypresses, that terminate further execution (clicks and quit actions)
 	if userInput = 0
-		; left click
 		ClickLeft()
-			
+
 
 	IfInString, ErrorLevel, EndKey:NumpadEnter
-		; right click
 		ClickRight()
 
 	IfInString, ErrorLevel, EndKey:Escape
-		; exit the script
 		Quit()
 
 	IfInString, ErrorLevel, EndKey:Space
@@ -142,19 +96,13 @@ Loop {
 	else
 	{
 
-
-		; handle the valid keypresses
-		; default for the last sector is 0
 		lastSector := 0
-		; determine what sector was selected
 		if userInput in 1,2,3,4,5,6,7,8,9
 			lastSector := userInput
 
-		; update the new sector size (it's one third of what it was) ... easy ;)
 		sectorWidth := Floor(sectorWidth/3)
 		sectorHeight := Floor(sectorHeight/3)
 		
-		; update sector top left corner location
 		if userInput in 2,5,8
 			sectorTopX := sectorTopX + sectorWidth
 		if userInput in 3,6,9
@@ -165,22 +113,19 @@ Loop {
 		if userInput in 4,5,6
 			sectorTopY := sectorTopY + sectorHeight
 		
-		; move the mouse to the new sector center
+		
 		newX := sectorTopX + Floor(sectorWidth/2)
 		newY := sectorTopY + Floor(sectorHeight/2)
-
-		
-		; if the user selected a sector, do the strange movements ;)
+	
 		if (lastSector != 0) {
 			MouseMove, %newX%, %newY%
-			; if the overlay is enabled, draw the crosshairs
+	
 			if overlayEnabled {
 				DrawGrid()
 				BackOne:= [newX,newY,sectorTopX,sectorTopY,sectorWidth,sectorHeight]
 				BackAll.Insert(BackOne)
 			}
 
-			; increase the depth
 			depth := depth + 1
 		}
 		
@@ -194,7 +139,7 @@ return
 
 calculateMaxDepth(screenSize) {
 	tmpHeight := screenSize
-	; get the size of the grid
+	
 	Loop {
 		tmpHeight := tmpHeight / 3
 
@@ -225,21 +170,14 @@ GoBack()
 
 DrawGrid(){
 	global
-; draw the bounding box
-	; top line
 	drawRect(sectorTopX, sectorTopY, sectorWidth, 1, 1)
-	; right line
 	drawRect(sectorTopX + sectorWidth - 1, sectorTopY, 1, sectorHeight, 2)
-	; bottom line
 	drawRect(sectorTopX, sectorTopY + sectorHeight - 1, sectorWidth, 1, 3)
-	; left line
 	drawRect(sectorTopX, sectorTopY, 1, sectorHeight, 4)
 
-	; inner lines - horizontal
 	drawRect(sectorTopX, sectorTopY + Floor(sectorHeight/3), sectorWidth, 1, 5)
 	drawRect(sectorTopX, sectorTopY + Ceil(2 * (sectorHeight/3)), sectorWidth, 1, 6)
 	
-	; inner lines - vertical
 	drawRect(sectorTopX + Floor(sectorWidth/3), sectorTopY, 1, sectorHeight, 7)
 	drawRect(sectorTopX + Ceil(2 * (sectorWidth/3)), sectorTopY, 1, sectorHeight, 8)
 }
@@ -251,7 +189,6 @@ drawRect(x, y, width, height, winNo) {
 	Gui, %winNo%: Show, x%x% y%y% w%width% h%height% noactivate
 }
 
-; erases the 'crosshair'
 CleanUpGui()
 {
 	global
@@ -267,12 +204,10 @@ CleanUpGui()
 }
 
 
-; exit the current session
 Quit()
 {
 	global
 	if (overlayEnabled) {
-		; destroy all gui windows
 		CleanUpGui()
 	}
 	exit
@@ -283,7 +218,6 @@ ClickLeft()
 {
 	global
 	if (overlayEnabled) {
-		; destroy all gui windows
 		CleanUpGui()
 	}
 	click
@@ -294,26 +228,22 @@ ClickRight()
 {
 	global
 	if (overlayEnabled) {
-		; destroy all gui windows
 		CleanUpGui()
 	}
 	Click right
 	exit
 }
 
-; reads/initializes the configuration file
 LoadConfigurationFile()
 {
 	global
 	IfNotExist,%iniFile%
 	{
-		; write the defaults to the configuration file
 		IniWrite,^NumpadMult,%iniFile%,Settings,hotkey
 		IniWrite,1,%iniFile%,Settings,overlayEnabled
 		IniWrite,FF3333,%iniFile%,Settings,color
 		IniWrite,70,%iniFile%,Settings,transparency
 	}
-	; read the configuration
 	IniRead,hotkey,%iniFile%,Settings,hotkey
 	IniRead,overlayEnabled,%iniFile%,Settings,overlayEnabled
 	IniRead,color,%iniFile%,Settings,color
@@ -321,7 +251,6 @@ LoadConfigurationFile()
 	HotKey,%hotkey%,START
 }
 
-; generate the tray menu
 GenerateTrayMenu()
 {
 	global
@@ -336,8 +265,6 @@ GenerateTrayMenu()
 	Menu,Tray,Tip,Divide and Conquer
 }
 
-
-; opens the Settings window
 SETTINGS:
 	HotKey,%hotkey%,Off
 	Gui,9: Destroy
@@ -355,7 +282,6 @@ SETTINGS:
 	Gui,9: Show,,Mouser Settings
 return
 
-; processes the OK button on the Settings page
 SETTINGSOK:
 	Gui,9: Submit
 	If shotkey<>
@@ -375,12 +301,10 @@ SETTINGSOK:
 	Gui,9: Destroy
 	
 	if (!overlayEnabled) {
-		; destroy all gui windows
 		CleanUpGui()
 	}
 return
 
-; processes the CANCEL button on the Settings page
 SETTINGSCANCEL:
 	HotKey,%hotkey%,START,On
 	HotKey,%hotkey%,On
@@ -388,18 +312,16 @@ SETTINGSCANCEL:
 return
 
 
-; used to close the about window
 GuiEscape:
 	Gui,Destroy
 
 return
 
-; launches the AutoHotkey homepage in the default browser
+
 AutohotkeyHome:
 	run http://www.autohotkey.com
 return
 
-; launches the Mouser lifehacker post in the default browser
 MouserHome:
 	run http://lifehacker.com/software/mouser/hack-attack-operate-your-mouse-with-your-keyboard-212816.php
 return
