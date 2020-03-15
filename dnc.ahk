@@ -61,25 +61,23 @@ bD.sectorTopX:= sectorTopX
 bD.sectorTopY:= sectorTopY
 bD.sectorWidth:= sectorWidth
 bD.sectorHeight:= sectorHeight
-
+bD.newX:= currentMouseX
+bD.newY:= currentMouseY
 
 BackAll:=Object()
-BackOne:= [ [currentMouseX, currentMouseY], bD]
-BackAll.Insert(BackOne)
 
 DrawGrid(bD)
+
+BackAll.Insert(bD)
+
 currentBox := bD
 
 Loop {
-
-	
 
 	if (depth >= MAX_DEPTH) {
 		CleanUpGui()
 		break
 	}
-	
-	MouseGetPos, currentMouseX, currentMouseY
 	
 	Input, userInput, T5 L1, {Escape}{Space}, w,e,r,s,d,f,x,c,v
 
@@ -102,12 +100,9 @@ Loop {
 	{
 		if(depth>0)
 		{
-			newCurrent:= GoBack(BackAll)
-			mousePosition:= newCurrent[1]
-			currentBox:= newCurrent[2]
+			currentBox:= GoBack(BackAll)
 			depth:= depth - 1
 		}
-		
 	}
 	else
 	{
@@ -115,11 +110,10 @@ Loop {
 		if userInput in x,c,v,s,d,f,w,e,r
 		{
 			currentBox:= computeNewBox(currentBox, userInput)
-			mousePosition:= moveMouseToCellCenter(currentBox)
-
+			moveMouseToCellCenter(currentBox)
 			DrawGrid(currentBox)
-			BackOne:= [mousePosition, currentBox]
-			BackAll.Insert(BackOne)			
+
+			BackAll.Insert(currentBox)			
 			depth := depth + 1
 			
 			if ErrorLevel = Max { }
@@ -131,12 +125,13 @@ Loop {
 }
 return
 
+
+
 moveMouseToCellCenter(currentBox)
 {
-	newX := currentBox.sectorTopX + Floor(currentBox.sectorWidth/2)
-	newY := currentBox.sectorTopY + Floor(currentBox.sectorHeight/2)
-	MouseMove, %newX%, %newY%
-	return [newX, newY]
+	xpos:= currentBox.newX
+	ypos:= currentBox.newY
+	MouseMove, xpos, ypos
 }
 
 computeNewBox(currentBox, selection)
@@ -154,6 +149,9 @@ computeNewBox(currentBox, selection)
 		newBox.sectorTopY := newBox.sectorTopY + (2*newBox.sectorHeight)
 	if selection in s,d,f
 		newBox.sectorTopY := newBox.sectorTopY + newBox.sectorHeight
+
+	newBox.newX := newBox.sectorTopX + Floor(newBox.sectorWidth/2)
+	newBox.newY := newBox.sectorTopY + Floor(newBox.sectorHeight/2)
 
 	return newBox
 }
@@ -174,11 +172,9 @@ GoBack(history)
 {
 	history.remove(history.MaxIndex())
 	BackOne := history[history.MaxIndex()]
-	newX:=		BackOne[1][1]
-	newY:=		BackOne[1][2]
-
-	MouseMove, %newX%, %newY%
-	DrawGrid(BackOne[2])
+	
+	moveMouseToCellCenter(BackOne)
+	DrawGrid(BackOne)
 	return BackOne
 }
 
