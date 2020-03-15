@@ -72,59 +72,58 @@ BackAll.Insert(bD)
 
 currentBox := bD
 
-Loop {
-
-	if (depth >= MAX_DEPTH) {
+Loop 
+{
+	if (depth >= MAX_DEPTH) 
+	{
 		CleanUpGui()
 		break
 	}
 	
 	Input, userInput, T5 L1, {Escape}{Space}, w,e,r,s,d,f,x,c,v
 
-	if ErrorLevel = Timeout
-		continue
-	
-	if userInput = j
-		ClickLeft()
-
-	if userInput = l  
-		ClickRight()
-
-	if userInput = k
-		ClickDouble()
-
-	IfInString, ErrorLevel, EndKey:Escape
-		Quit()
-
-	IfInString, ErrorLevel, EndKey:Space
+	if userInput in x,c,v,s,d,f,w,e,r
 	{
-		if(depth>0)
-		{
-			currentBox:= GoBack(BackAll)
-			depth:= depth - 1
-		}
-	}
-	else
-	{
+		currentBox:= computeNewBox(currentBox, userInput)
+		moveMouseToCellCenter(currentBox)
+		DrawGrid(currentBox)
+
+		BackAll.Insert(currentBox)			
+		depth := depth + 1
 		
-		if userInput in x,c,v,s,d,f,w,e,r
+		if ErrorLevel = Max { }
+
+		if ErrorLevel = NewInput
+			return
+	}
+	else 
+	{			
+		if ErrorLevel = Timeout
+			continue
+		
+		if userInput = j
+			ClickLeft()
+
+		if userInput = l  
+			ClickRight()
+
+		if userInput = k
+			ClickDouble()
+
+		IfInString, ErrorLevel, EndKey:Escape
+			Quit()
+
+		IfInString, ErrorLevel, EndKey:Space
 		{
-			currentBox:= computeNewBox(currentBox, userInput)
-			moveMouseToCellCenter(currentBox)
-			DrawGrid(currentBox)
-
-			BackAll.Insert(currentBox)			
-			depth := depth + 1
-			
-			if ErrorLevel = Max { }
-
-			if ErrorLevel = NewInput
-				return
+			if(depth>0)
+			{
+				currentBox:= GoBack(BackAll)
+				depth:= depth - 1
+			}
 		}
 	}
 }
 return
-
 
 
 moveMouseToCellCenter(currentBox)
