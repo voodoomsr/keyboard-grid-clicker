@@ -18,6 +18,10 @@ color := Ceil(color)
 transparency := transparency
 
 return
+
+Home::
+Gosub, START
+
 START:
 CoordMode, Mouse, Screen
 MouseGetPos, currentMouseX, currentMouseY
@@ -74,17 +78,19 @@ Loop {
 	
 	MouseGetPos, currentMouseX, currentMouseY
 	
-	Input, userInput, T5 L1, {NumpadEnter}{Escape}{Space}, 0,1,2,3,4,5,6,7,8,9
+	Input, userInput, T5 L1, {Escape}{Space}
 
 	if ErrorLevel = Timeout
 		continue
 	
-	if userInput = 0
+	if userInput = j
 		ClickLeft()
 
-
-	IfInString, ErrorLevel, EndKey:NumpadEnter
+	if userInput = l
 		ClickRight()
+
+	if userInput = k
+		ClickDouble()
 
 	IfInString, ErrorLevel, EndKey:Escape
 		Quit()
@@ -97,20 +103,20 @@ Loop {
 	{
 
 		lastSector := 0
-		if userInput in 1,2,3,4,5,6,7,8,9
+		if userInput in x,c,v,s,d,f,w,e,r
 			lastSector := userInput
 
 		sectorWidth := Floor(sectorWidth/3)
 		sectorHeight := Floor(sectorHeight/3)
 		
-		if userInput in 2,5,8
+		if userInput in c,d,e
 			sectorTopX := sectorTopX + sectorWidth
-		if userInput in 3,6,9
+		if userInput in v,f,r
 			sectorTopX := sectorTopX + (2*sectorWidth)
 
-		if userInput in 1,2,3
+		if userInput in x,c,v
 			sectorTopY := sectorTopY + (2*sectorHeight)
-		if userInput in 4,5,6
+		if userInput in s,d,f
 			sectorTopY := sectorTopY + sectorHeight
 		
 		
@@ -231,6 +237,16 @@ ClickRight()
 		CleanUpGui()
 	}
 	Click right
+	exit
+}
+
+ClickDouble()
+{
+	global
+	if (overlayEnabled) {
+		CleanUpGui()
+	}
+	Click 2
 	exit
 }
 
