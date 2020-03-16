@@ -7,32 +7,13 @@
 ; Based upon DNC from Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
 
 #SingleInstance,Force 
-#Include trayWindow\aboutWindow.ahk
 SetWinDelay,0 
 
 iniFile = dnc.ini
 LoadConfigurationFile()
-GenerateTrayMenu()
 color := Ceil(color)
 transparency := transparency
-
-
-
-START:
 CoordMode, Mouse, Screen
-MouseGetPos, currentMouseX, currentMouseY
-
-SysGet, resolution, Monitor
-
-lastSector := 0	
-
-currentMonitor := GetMonitorMouse()
-SysGet, Monitor, Monitor, %currentMonitor%
-sectorTopX := MonitorLeft
-sectorTopY := 0
-sectorWidth := (MonitorRight-MonitorLeft)
-sectorHeight := MonitorBottom
-
 
 GetMonitorMouse()
 {
@@ -51,36 +32,47 @@ GetMonitorMouse()
 	}
 }
 
-
-
+SysGet, resolution, Monitor
 MAX_DEPTH := calculateMaxDepth(resolutionBottom)
-depth := 0
 
-bD:= {}
-bD.sectorTopX:= sectorTopX
-bD.sectorTopY:= sectorTopY
-bD.sectorWidth:= sectorWidth
-bD.sectorHeight:= sectorHeight
-bD.newX:= currentMouseX
-bD.newY:= currentMouseY
 
-BackAll:=Object()
+resetSharedState(){
+	global
+	depth := 0
+	BackAll:=Object()
+}
 
-DrawGrid(bD)
+resetSharedState()
 
-BackAll.Insert(bD)
 
-currentBox := bD
-
-Loop 
+setupInitialBox()
 {
+	currentMonitor := GetMonitorMouse()
+	SysGet, Monitor, Monitor, %currentMonitor%
+	bD:= {}
+	bD.sectorTopX := MonitorLeft
+	bD.sectorTopY := 0
+	bD.sectorWidth := (MonitorRight-MonitorLeft)
+	bD.sectorHeight := MonitorBottom
+
+	MouseGetPos, currentMouseX, currentMouseY
+	bD.newX:= currentMouseX
+	bD.newY:= currentMouseY
+	return bD
+}
+
+
+main(currentBox, userInput)
+{
+	global depth
+	global MAX_DEPTH
+	global BackAll
+
 	if (depth >= MAX_DEPTH) 
 	{
 		CleanUpGui()
-		break
+		return
 	}
-	
-	Input, userInput, T5 L1, {Escape}{Space}, w,e,r,s,d,f,x,c,v
 
 	if userInput in x,c,v,s,d,f,w,e,r
 	{
@@ -89,18 +81,10 @@ Loop
 		DrawGrid(currentBox)
 
 		BackAll.Insert(currentBox)			
-		depth := depth + 1
-		
-		if ErrorLevel = Max { }
-
-		if ErrorLevel = NewInput
-			return
+		depth := depth + 1		
 	}
 	else 
 	{			
-		if ErrorLevel = Timeout
-			continue
-		
 		if userInput = j
 			ClickLeft()
 
@@ -110,10 +94,10 @@ Loop
 		if userInput = k
 			ClickDouble()
 
-		IfInString, ErrorLevel, EndKey:Escape
+		if userInput = Escape
 			Quit()
 
-		IfInString, ErrorLevel, EndKey:Space
+		if userInput = Space
 		{
 			if(depth>0)
 			{
@@ -122,9 +106,8 @@ Loop
 			}
 		}
 	}
+	return currentBox
 }
-return
-
 
 moveMouseToCellCenter(currentBox)
 {
@@ -216,7 +199,7 @@ CleanUpGui()
 Quit()
 {
 	CleanUpGui()
-	exit
+	Suspend, On
 }
 	
 
@@ -224,21 +207,21 @@ ClickLeft()
 {
 	CleanUpGui()
 	click
-	exit
+	Suspend, On
 }
 
 ClickRight()
 {
 	CleanUpGui()
 	Click right
-	exit
+	Suspend, On
 }
 
 ClickDouble()
 {
 	CleanUpGui()
 	Click 2
-	exit
+	Suspend, On
 }
 
 LoadConfigurationFile()
@@ -253,81 +236,33 @@ LoadConfigurationFile()
 	IniRead,hotkey,%iniFile%,Settings,hotkey
 	IniRead,color,%iniFile%,Settings,color
 	IniRead,transparency,%iniFile%,Settings,transparency
-	HotKey,%hotkey%,START
 }
 
-GenerateTrayMenu()
-{
-	global
-	Menu,Tray,NoStandard 
-	Menu,Tray,DeleteAll 
-	Menu,Tray,Add,DnC,ABOUT
-	Menu,Tray,Add,
-	Menu,Tray,Add,&Settings...,SETTINGS
-	Menu,Tray,Add,&About...,ABOUT
-	Menu,Tray,Add,E&xit,EXIT
-	Menu,Tray,Default,DnC
-	Menu,Tray,Tip,Divide and Conquer
-}
 
-SETTINGS:
-	HotKey,%hotkey%,Off
-	Gui,9: Destroy
-	Gui,9: Add,GroupBox,xm ym w400 h70,&Hotkey
-	Gui,9: Add,Hotkey,xp+10 yp+20 w380 vshotkey
-	StringReplace,current,hotkey,+,Shift +%A_Space%
-	StringReplace,current,current,^,Ctrl +%A_Space%
-	StringReplace,current,current,!,Alt +%A_Space%
-	Gui,9: Add, Text,,Current hotkey: %current%
-	Gui,9: Add, GroupBox, xm y+10 w400 h55,&Grid transparency (0 to 250; default:70; currently:%transparency%):
-	Gui,9: Add, Slider, xp+10 yp+20 w380 vstransparency Range0-250 ToolTipRight TickInterval25, %transparency%
-	Gui,9: Add, Button, xm y+30 w75 GSETTINGSOK,&OK
-	Gui,9: Add, Button, x+5 w75 GSETTINGSCANCEL,&Cancel
-	Gui,9: Show,,Mouser Settings
-return
-
-SETTINGSOK:
-	Gui,9: Submit
-	If shotkey<>
-	{
-	  hotkey:=shotkey
-	  HotKey,%hotkey%,START
-	}
-	HotKey,%hotkey%,On
-	If stransparency<>
-	  transparency:=stransparency
-	if svisualizations_cbox<>
-	  overlayEnabled := svisualizations_cbox
-	IniWrite,%hotkey%,%iniFile%,Settings,hotkey
-	IniWrite,%transparency%,%iniFile%,Settings,transparency
-	IniWrite,%checkbox%, %iniFile%, Settings,checkbox
-	Gui,9: Destroy
-	
-	if (!overlayEnabled) {
-		CleanUpGui()
-	}
-return
-
-SETTINGSCANCEL:
-	HotKey,%hotkey%,START,On
-	HotKey,%hotkey%,On
-	Gui,9: Destroy
+PgDn::
+Suspend, Off
+resetSharedState()
+currentBox:= setupInitialBox()
+DrawGrid(currentBox)
+BackAll.Insert(currentBox)
 return
 
 
-GuiEscape:
-	Gui,Destroy
-
+w::
+e::
+r::
+s::
+d::
+f::
+x::
+c::
+v::
+j::
+k::
+l::
+Escape::
+Space::
+userInput := SubStr(A_ThisHotkey,1)
+currentBox:= main(currentBox, userInput)
 return
 
-
-AutohotkeyHome:
-	run http://www.autohotkey.com
-return
-
-MouserHome:
-	run http://lifehacker.com/software/mouser/hack-attack-operate-your-mouse-with-your-keyboard-212816.php
-return
-
-EXIT:
-	ExitApp
