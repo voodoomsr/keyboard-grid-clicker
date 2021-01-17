@@ -62,6 +62,41 @@ setupInitialBox()
 }
 
 
+setupInitialBoxLeft()
+{
+	currentMonitor := 1
+	SysGet, Monitor, Monitor, %currentMonitor%
+	bD:= {}
+	bD.sectorTopX := MonitorLeft
+	bD.sectorTopY := 0
+	bD.sectorWidth := (MonitorRight-MonitorLeft)
+	bD.sectorHeight := MonitorBottom
+
+	MouseGetPos, currentMouseX, currentMouseY
+	bD.newX:= currentMouseX
+	bD.newY:= currentMouseY
+	return bD
+}
+
+
+setupInitialBoxRight()
+{
+	currentMonitor := 2
+	SysGet, Monitor, Monitor, %currentMonitor%
+	bD:= {}
+	bD.sectorTopX := MonitorLeft
+	bD.sectorTopY := 0
+	bD.sectorWidth := (MonitorRight-MonitorLeft)
+	bD.sectorHeight := MonitorBottom
+
+	MouseGetPos, currentMouseX, currentMouseY
+	bD.newX:= currentMouseX
+	bD.newY:= currentMouseY
+	return bD
+}
+
+
+
 main(currentBox, userInput)
 {
 	global depth
@@ -205,22 +240,22 @@ Quit()
 
 ClickLeft()
 {
-	CleanUpGui()
 	click
+	CleanUpGui()
 	Suspend, On
 }
 
 ClickRight()
 {
-	CleanUpGui()
 	Click right
+	CleanUpGui()
 	Suspend, On
 }
 
 ClickDouble()
 {
-	CleanUpGui()
 	Click 2
+	CleanUpGui()
 	Suspend, On
 }
 
@@ -242,7 +277,16 @@ LoadConfigurationFile()
 PgDn::
 Suspend, Off
 resetSharedState()
-currentBox:= setupInitialBox()
+currentBox:= setupInitialBoxLeft()
+DrawGrid(currentBox)
+BackAll.Insert(currentBox)
+return
+
+
+PgUp::
+Suspend, Off
+resetSharedState()
+currentBox:= setupInitialBoxRight()
 DrawGrid(currentBox)
 BackAll.Insert(currentBox)
 return
