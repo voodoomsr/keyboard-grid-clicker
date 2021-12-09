@@ -7,6 +7,9 @@
 ; Based upon DNC from Petr 'Vorkronor' Stedry (petr.stedry@gmail.com)
 
 #SingleInstance,Force 
+#InstallKeybdHook
+SetBatchLines -1
+SetKeyDelay -1
 SetWinDelay,0 
 
 iniFile = dnc.ini
@@ -108,7 +111,7 @@ main(currentBox, userInput)
 		CleanUpGui()
 		return
 	}
-
+	
 	if userInput in x,c,v,s,d,f,w,e,r
 	{
 		currentBox:= computeNewBox(currentBox, userInput)
@@ -129,10 +132,10 @@ main(currentBox, userInput)
 		if userInput = k
 			ClickDouble()
 
-		if userInput = Escape
+		if (userInput = "Escape")
 			Quit()
 
-		if userInput = Space
+		if (userInput = "Space")
 		{
 			if(depth>0)
 			{
@@ -196,6 +199,8 @@ GoBack(history)
 }
 
 DrawGrid(boxDefinition){
+	global
+	drawing := true
 	bD := boxDefinition.Clone()
 	drawRect(bD.sectorTopX, bD.sectorTopY, bD.sectorWidth, 1, 1)
 	drawRect(bD.sectorTopX + bD.sectorWidth - 1, bD.sectorTopY, 1, bD.sectorHeight, 2)
@@ -207,6 +212,7 @@ DrawGrid(boxDefinition){
 	
 	drawRect(bD.sectorTopX + Floor(bD.sectorWidth/3), bD.sectorTopY, 1, bD.sectorHeight, 7)
 	drawRect(bD.sectorTopX + Ceil(2 * (bD.sectorWidth/3)), bD.sectorTopY, 1, bD.sectorHeight, 8)
+	drawing := false
 }
 
 drawRect(x, y, width, height, winNo) {
@@ -216,9 +222,25 @@ drawRect(x, y, width, height, winNo) {
 	Gui, %winNo%: Show, x%x% y%y% w%width% h%height% noactivate
 }
 
+PartialDestroy()
+{
+	global
+	Gui,1: Destroy
+	Gui,2: Destroy
+	Gui,3: Destroy
+	Gui,4: Destroy
+	Gui,5: Destroy
+	Gui,6: Destroy
+	Gui,7: Destroy
+	Gui,8: Destroy
+}
+
 CleanUpGui()
 {
 	global
+	while drawing {
+		Sleep, 500
+	}
 	Gui,1: Destroy
 	Gui,2: Destroy
 	Gui,3: Destroy
@@ -234,29 +256,30 @@ CleanUpGui()
 Quit()
 {
 	CleanUpGui()
-	Suspend, On
+	Exit
+	
 }
 	
 
 ClickLeft()
 {
-	click
 	CleanUpGui()
-	Suspend, On
+	click
+	
 }
 
 ClickRight()
 {
 	Click right
 	CleanUpGui()
-	Suspend, On
+	
 }
 
 ClickDouble()
 {
 	Click 2
 	CleanUpGui()
-	Suspend, On
+	
 }
 
 LoadConfigurationFile()
@@ -274,39 +297,46 @@ LoadConfigurationFile()
 }
 
 
-PgDn::
-Suspend, Off
+PgUp::
+BlockInput, On
 resetSharedState()
 currentBox:= setupInitialBoxLeft()
-DrawGrid(currentBox)
+DrawGrid(currentBox)d
 BackAll.Insert(currentBox)
+MainLoop(currentBox)
+BlockInput, Off
 return
 
 
-PgUp::
-Suspend, Off
+PgDn::
+BlockInput, On
 resetSharedState()
 currentBox:= setupInitialBoxRight()
-DrawGrid(currentBox)
+DrawGrid(currentBox)j
 BackAll.Insert(currentBox)
+MainLoop(currentBox)  
+BlockInput, Off
 return
 
-
-w::
-e::
-r::
-s::
-d::
-f::
-x::
-c::
-v::
-j::
-k::
-l::
-Escape::
-Space::
-userInput := SubStr(A_ThisHotkey,1)
-currentBox:= main(currentBox, userInput)
-return
-
+MainLoop(currentBox){
+	While, true
+	{
+		;BlockInput, Off
+		Input, SingleKey, L1, {Escape}{Space}
+		;BlockInput, On
+		userInput := SingleKey
+ 		if (ErrorLevel = "EndKey:Space")
+		{
+			userInput := "Space"
+		}
+		if (ErrorLevel = "EndKey:Escape")
+		{
+			userInput := "Escape"
+		}
+		currentBox:= main(currentBox, userInput)
+		if userInput in j,k,l,"Escape"
+		{
+			break
+		}
+	}
+}
